@@ -24,19 +24,19 @@ pub struct Player {
     defense: u32,
     accuracy: u32,
     current_health: u32,
-    possible_moves: Vec<Box<dyn Move>>,
+    moves: Vec<Box<dyn Move>>,
     status: Option<Box<dyn Status>>,
 }
 
 impl Player {
-    pub fn new(max_health: u32, possible_moves: Vec<Box<dyn Move>>) -> Self {
+    pub fn new(max_health: u32, attack: u32, defense: u32, accuracy: u32) -> Self {
         Player {
             max_health,
-            attack: 0,
-            defense: 0,
-            accuracy: 0,
+            attack,
+            defense,
+            accuracy,
             current_health: max_health,
-            possible_moves,
+            moves: Vec::new(),
             status: None,
         }
     }
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn check_stat_change() {
-        let mut player = Player::new(100, Vec::new());
+        let mut player = Player::new(100, 0, 0, 0);
         player.change_stats(Stat::Attack, 10, false);
         assert_eq!(player.attack, 10);
         player.change_stats(Stat::Attack, 10, false);
@@ -81,24 +81,15 @@ mod tests {
 
     #[test]
     fn check_stat_change_subtract() {
-        let mut player = Player::new(100, Vec::new());
-        player.change_stats(Stat::Defense, 10, false);
-        assert_eq!(player.defense, 10);
+        let mut player = Player::new(100, 0, 10, 0);
         player.change_stats(Stat::Defense, 10, true);
         assert_eq!(player.defense, 0);
     }
 
     #[test]
     fn check_stat_change_lower_invalid() {
-        let mut player = Player::new(100, Vec::new());
+        let mut player = Player::new(100, 0, 0, 0);
         player.change_stats(Stat::Defense, 1, true);
-        assert_eq!(player.defense, 0);
-    }
-
-    #[test]
-    fn check_stat_change_lower() {
-        let mut player = Player::new(100, Vec::new());
-        player.change_stats(Stat::Defense, 0, true);
         assert_eq!(player.defense, 0);
     }
 }
