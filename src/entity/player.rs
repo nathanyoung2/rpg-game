@@ -6,7 +6,7 @@ pub struct Player {
     defense: u32,
     accuracy: u32,
     current_health: u32,
-    moves: Vec<Box<dyn Move>>,
+    pub moves: Vec<Box<dyn Move>>,
     status: Option<Box<dyn Status>>,
 }
 

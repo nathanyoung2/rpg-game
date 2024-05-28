@@ -1,11 +1,11 @@
 pub mod player;
 
 pub trait Status {
-    fn inflict(&self, target: dyn Character);
+    fn inflict(&self, target: &dyn Character);
 }
 
 pub trait Move {
-    fn execute(&self, target: dyn Character);
+    fn execute(&self, target: &dyn Character);
 }
 
 pub trait Character {
