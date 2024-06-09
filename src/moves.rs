@@ -1,10 +1,12 @@
-use crate::entity::Entity;
+use crate::entity::{Entity, Stat};
 use std::fmt;
 
 #[derive(PartialEq, Clone)]
 pub enum Move {
     Attack,
     Heal,
+    DebuffAcc,
+    BuffDef,
 }
 
 impl fmt::Display for Move {
@@ -12,6 +14,8 @@ impl fmt::Display for Move {
         match self {
             Move::Attack => write!(f, "Attack"),
             Move::Heal => write!(f, "Heal"),
+            Move::DebuffAcc => write!(f, "Debuff Accuracy"),
+            Move::BuffDef => write!(f, "Buff Defense"),
         }
     }
 }
@@ -28,17 +32,29 @@ impl fmt::Display for MoveNotFoundError {
     }
 }
 
-pub fn execute(mv: Move, caller: &mut Entity, enemy: &mut Entity) {
+pub fn execute(mv: Move, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
     match mv {
-        Move::Attack => attack(enemy),
-        Move::Heal => heal(caller),
+        Move::Attack => {
+            attack(enemy, 50 + (50.0 * attack_multiplier) as u32);
+            println!("{} attacked {}", caller.name, enemy.name);
+        }
+        Move::Heal => {
+            heal(caller, 35);
+            println!("{} healed its HP", caller.name);
+        }
+        Move::DebuffAcc => {
+            enemy.change_stat(Stat::Accuracy, -5);
+        }
+        Move::BuffDef => {
+            caller.change_stat(Stat::Defense, 5);
+        }
     }
 }
 
-fn attack(target: &mut Entity) {
-    target.damage(50);
+fn attack(target: &mut Entity, damage: u32) {
+    target.damage(damage);
 }
 
-fn heal(target: &mut Entity) {
-    target.heal(50);
+fn heal(target: &mut Entity, health: u32) {
+    target.heal(health);
 }
