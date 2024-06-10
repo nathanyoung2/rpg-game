@@ -10,12 +10,39 @@ pub enum Move {
 }
 
 impl fmt::Display for Move {
+    /// Implement display to be able to display the names of the moves.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Move::Attack => write!(f, "Attack"),
             Move::Heal => write!(f, "Heal"),
             Move::DebuffAcc => write!(f, "Debuff Accuracy"),
             Move::BuffDef => write!(f, "Buff Defense"),
+        }
+    }
+}
+
+impl Move {
+    /// Execute itself.
+    /// Each move has unique functionality.
+    pub fn execute(&self, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
+        match self {
+            Move::Attack => {
+                // add the multiplied attack onto the original attack.
+                attack(enemy, 50 + (50.0 * attack_multiplier) as u32);
+                println!("{} attacked {}", caller.name, enemy.name);
+            }
+            Move::Heal => {
+                heal(caller, 35);
+                println!("{} healed its HP", caller.name);
+            }
+            Move::DebuffAcc => {
+                enemy.change_stat(Stat::Accuracy, -5);
+                println!("{} lowered {}'s accuracy", caller.name, enemy.name);
+            }
+            Move::BuffDef => {
+                caller.change_stat(Stat::Defense, 5);
+                println!("{} raised its defense", caller.name);
+            }
         }
     }
 }
@@ -29,25 +56,6 @@ impl fmt::Display for MoveNotFoundError {
             f,
             "The index specified is outside of the range of the entity's moves",
         )
-    }
-}
-
-pub fn execute(mv: Move, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
-    match mv {
-        Move::Attack => {
-            attack(enemy, 50 + (50.0 * attack_multiplier) as u32);
-            println!("{} attacked {}", caller.name, enemy.name);
-        }
-        Move::Heal => {
-            heal(caller, 35);
-            println!("{} healed its HP", caller.name);
-        }
-        Move::DebuffAcc => {
-            enemy.change_stat(Stat::Accuracy, -5);
-        }
-        Move::BuffDef => {
-            caller.change_stat(Stat::Defense, 5);
-        }
     }
 }
 

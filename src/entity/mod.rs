@@ -1,28 +1,43 @@
-use crate::moves;
+mod rust_entity;
+
 use crate::moves::Move;
 use crate::moves::MoveNotFoundError;
 use rand::prelude::*;
+
+pub trait EntityType {
+    fn get_name() -> &'static str;
+    fn get_max_health() -> u32;
+    fn get_attack() -> u32;
+    fn get_defense() -> u32;
+    fn get_accuracy() -> u32;
+    fn get_moves() -> Vec<Move>;
+    fn get_weaknesses() -> Vec<Move>;
+}
 
 pub struct Entity {
     pub health: u32,
     pub max_health: u32,
     pub name: String,
+    pub level: u32,
     attack: u32,
     defense: u32,
     accuracy: u32,
     moves: Vec<Move>,
+    weaknesses: Vec<Move>,
 }
 
 impl Entity {
-    pub fn new(name: &str, max_health: u32, attack: u32, defense: u32, accuracy: u32) -> Self {
+    fn new(entity_type: dyn EntityType) -> Self {
         Entity {
-            name: String::from(name),
+            name: String::from(entity_type::get_name()),
             health: max_health,
             max_health,
+            level,
             attack,
             defense,
             accuracy,
-            moves: Vec::new(),
+            moves,
+            weaknesses,
         }
     }
 
@@ -62,22 +77,14 @@ impl Entity {
             Some(mv) => mv.clone(),
             None => return Err(MoveNotFoundError),
         };
-
         println!("{} used {}...", self.name, mv);
-
         if !self.accuracy_roll() {
             println!("{} missed", self.name);
             return Ok(());
         }
-
         let attack_multiplier: f64 = self.attack as f64 / 100.0;
-        moves::execute(mv, self, target, attack_multiplier);
+        mv.execute(self, target, attack_multiplier);
         Ok(())
-    }
-
-    pub fn set_moves(&mut self, mut moves: Vec<Move>) {
-        moves.truncate(4);
-        self.moves = moves;
     }
 
     pub fn get_moves(&self) -> &Vec<Move> {
@@ -96,11 +103,12 @@ impl Entity {
                 &mut self.accuracy
             }
         };
+
         if amount < 0 && amount.abs() > *stat_to_change as i32 {
-            final_amount = *stat_to_change as i32;
+            final_amount = -(*stat_to_change as i32);
         }
 
-        *stat_to_change = (*stat_to_change as i32 - final_amount) as u32;
+        *stat_to_change = (*stat_to_change as i32 + final_amount) as u32;
     }
 }
 
@@ -122,6 +130,7 @@ mod tests {
         assert_eq!(player.health, 12);
     }
 
+    #[test]
     fn change_stat() {
         let mut player = Entity::new("RandomPlayer", 200, 0, 5, 90);
         assert_eq!(player.defense, 5);

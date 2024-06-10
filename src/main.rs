@@ -3,7 +3,12 @@ use rpg_game::moves::Move;
 
 fn main() {
     let mut player = Entity::new("Player1", 200, 20, 20, 90);
-    player.set_moves(vec![Move::Attack, Move::Heal]);
+    player.set_moves(vec![
+        Move::Attack,
+        Move::Heal,
+        Move::BuffDef,
+        Move::DebuffAcc,
+    ]);
 
     let mut enemy = Entity::new("Enemy1", 200, 10, 10, 90);
     enemy.set_moves(vec![Move::Attack, Move::Heal]);
