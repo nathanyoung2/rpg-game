@@ -1,17 +1,12 @@
 mod rust_entity;
+pub use rust_entity::RustEntity;
 
 use crate::moves::Move;
 use crate::moves::MoveNotFoundError;
 use rand::prelude::*;
 
 pub trait EntityType {
-    fn get_name() -> &'static str;
-    fn get_max_health() -> u32;
-    fn get_attack() -> u32;
-    fn get_defense() -> u32;
-    fn get_accuracy() -> u32;
-    fn get_moves() -> Vec<Move>;
-    fn get_weaknesses() -> Vec<Move>;
+    fn new(level: u32) -> Entity;
 }
 
 pub struct Entity {
@@ -27,9 +22,18 @@ pub struct Entity {
 }
 
 impl Entity {
-    fn new(entity_type: dyn EntityType) -> Self {
+    fn new(
+        name: &str,
+        max_health: u32,
+        level: u32,
+        attack: u32,
+        defense: u32,
+        accuracy: u32,
+        moves: Vec<Move>,
+        weaknesses: Vec<Move>,
+    ) -> Self {
         Entity {
-            name: String::from(entity_type::get_name()),
+            name: String::from(name),
             health: max_health,
             max_health,
             level,

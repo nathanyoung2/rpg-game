@@ -3,10 +3,7 @@ use std::fmt;
 
 #[derive(PartialEq, Clone)]
 pub enum Move {
-    Attack,
-    Heal,
-    DebuffAcc,
-    BuffDef,
+    Error,
 }
 
 impl fmt::Display for Move {

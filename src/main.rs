@@ -1,8 +1,8 @@
-use rpg_game::entity::Entity;
+use rpg_game::entity::{Entity, RustEntity};
 use rpg_game::moves::Move;
 
 fn main() {
-    let mut player = Entity::new("Player1", 200, 20, 20, 90);
+    let mut player = RustEntity::new();
     player.set_moves(vec![
         Move::Attack,
         Move::Heal,
