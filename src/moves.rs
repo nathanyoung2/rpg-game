@@ -22,7 +22,7 @@ impl Move {
         match self {
             Move::IntParse => {
                 println!(
-                    "A integer needs to be parsed into a string. This may cause an error! {} and {} attempt to handle it",
+                    "A string needs to be parsed into an integer. This may cause an error! {} and {} attempt to handle it",
                     caller.name, enemy.name
                 );
 
