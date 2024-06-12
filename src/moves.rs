@@ -1,16 +1,16 @@
-use crate::entity::{Entity, Stat};
+use crate::entity::{Entity, EntityName};
 use std::fmt;
 
 #[derive(PartialEq, Clone)]
 pub enum Move {
-    Error,
+    IntParse,
 }
 
 impl fmt::Display for Move {
     /// Implement display to be able to display the names of the moves.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Move::Error => write!(f, "Error"),
+            Move::IntParse => write!(f, "Parse an integer"),
         }
     }
 }
@@ -20,20 +20,32 @@ impl Move {
     /// Each move has unique functionality.
     pub fn execute(&self, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
         match self {
-            Move::Error => {
-                println!("An error has occured!");
-                if caller.get_stat(Stat::ErrorHandling) > enemy.get_stat(Stat::ErrorHandling) {
+            Move::IntParse => {
+                println!(
+                    "A integer needs to be parsed into a string. This may cause an error! {} and {} attempt to handle it",
+                    caller.name, enemy.name
+                );
+
+                let get_specific_dialogue = |name: &EntityName| {
+                    return match name {
+                        EntityName::Rust => "Rust returned a result type that can be matched on.",
+                        EntityName::Cpp => "C++ needed a catch block to avoid a runtime error.",
+                    };
+                };
+                println!("{}", get_specific_dialogue(&caller.name));
+                println!("{}", get_specific_dialogue(&enemy.name));
+
+                if caller.error_handling > enemy.error_handling {
                     println!(
-                        "{}'s error handling is better than the enemy {}'s error handling...",
+                        "{} handled the error better than {}",
                         caller.name, enemy.name
                     );
                     attack(caller, 20);
                     attack(enemy, (80 as f64 * attack_multiplier) as u32);
-                    println!("enemy {} took more damage", enemy.name)
-                } else if enemy.get_stat(Stat::ErrorHandling) > caller.get_stat(Stat::ErrorHandling)
-                {
+                    println!("{} took more damage", enemy.name);
+                } else if enemy.error_handling > caller.error_handling {
                     println!(
-                        "enemy {}'s error handling is better than {}'s error handing...",
+                        "{} handled the error better than {}",
                         enemy.name, caller.name
                     );
                     attack(caller, 80);

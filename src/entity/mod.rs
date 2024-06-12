@@ -1,3 +1,5 @@
+use std::fmt;
+
 mod cpp_entity;
 pub use cpp_entity::CppEntity;
 
@@ -12,22 +14,36 @@ pub trait EntityType {
     fn new(level: u32) -> Entity;
 }
 
+pub enum EntityName {
+    Rust,
+    Cpp,
+}
+
+impl fmt::Display for EntityName {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            EntityName::Rust => write!(f, "Rust"),
+            EntityName::Cpp => write!(f, "C++"),
+        }
+    }
+}
+
 pub struct Entity {
     pub health: u32,
     pub max_health: u32,
-    pub name: String,
+    pub name: EntityName,
     pub level: u32,
-    attack: u32,
-    defense: u32,
-    accuracy: u32,
-    error_handling: u32,
+    pub attack: u32,
+    pub defense: u32,
+    pub accuracy: u32,
+    pub error_handling: u32,
     moves: Vec<Move>,
     weaknesses: Vec<Move>,
 }
 
 impl Entity {
     fn new(
-        name: &str,
+        name: EntityName,
         max_health: u32,
         level: u32,
         attack: u32,
@@ -38,7 +54,7 @@ impl Entity {
         weaknesses: Vec<Move>,
     ) -> Self {
         Entity {
-            name: String::from(name),
+            name: name,
             health: max_health,
             max_health,
             level,
