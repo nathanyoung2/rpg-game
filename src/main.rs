@@ -1,17 +1,8 @@
-use rpg_game::entity::{Entity, RustEntity};
-use rpg_game::moves::Move;
+use rpg_game::entity::{CppEntity, EntityType, RustEntity};
 
 fn main() {
-    let mut player = RustEntity::new();
-    player.set_moves(vec![
-        Move::Attack,
-        Move::Heal,
-        Move::BuffDef,
-        Move::DebuffAcc,
-    ]);
-
-    let mut enemy = Entity::new("Enemy1", 200, 10, 10, 90);
-    enemy.set_moves(vec![Move::Attack, Move::Heal]);
+    let mut player = RustEntity::new(0);
+    let mut enemy = CppEntity::new(0);
 
     loop {
         println!("Player Health: {}/{}", player.health, player.max_health);
@@ -22,9 +13,17 @@ fn main() {
             println!("The enemy has died, you win");
             break;
         }
+        if player.health == 0 {
+            println!("The enemy has died, you win");
+            break;
+        }
         rpg_game::enemy_move(&mut enemy, &mut player);
         if player.health == 0 {
             println!("The player has died, you lose");
+            break;
+        }
+        if enemy.health == 0 {
+            println!("The enemy has died, you win");
             break;
         }
     }

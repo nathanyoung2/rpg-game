@@ -10,10 +10,7 @@ impl fmt::Display for Move {
     /// Implement display to be able to display the names of the moves.
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Move::Attack => write!(f, "Attack"),
-            Move::Heal => write!(f, "Heal"),
-            Move::DebuffAcc => write!(f, "Debuff Accuracy"),
-            Move::BuffDef => write!(f, "Buff Defense"),
+            Move::Error => write!(f, "Error"),
         }
     }
 }
@@ -23,22 +20,30 @@ impl Move {
     /// Each move has unique functionality.
     pub fn execute(&self, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
         match self {
-            Move::Attack => {
-                // add the multiplied attack onto the original attack.
-                attack(enemy, 50 + (50.0 * attack_multiplier) as u32);
-                println!("{} attacked {}", caller.name, enemy.name);
-            }
-            Move::Heal => {
-                heal(caller, 35);
-                println!("{} healed its HP", caller.name);
-            }
-            Move::DebuffAcc => {
-                enemy.change_stat(Stat::Accuracy, -5);
-                println!("{} lowered {}'s accuracy", caller.name, enemy.name);
-            }
-            Move::BuffDef => {
-                caller.change_stat(Stat::Defense, 5);
-                println!("{} raised its defense", caller.name);
+            Move::Error => {
+                println!("An error has occured!");
+                if caller.get_stat(Stat::ErrorHandling) > enemy.get_stat(Stat::ErrorHandling) {
+                    println!(
+                        "{}'s error handling is better than the enemy {}'s error handling...",
+                        caller.name, enemy.name
+                    );
+                    attack(caller, 20);
+                    attack(enemy, (80 as f64 * attack_multiplier) as u32);
+                    println!("enemy {} took more damage", enemy.name)
+                } else if enemy.get_stat(Stat::ErrorHandling) > caller.get_stat(Stat::ErrorHandling)
+                {
+                    println!(
+                        "enemy {}'s error handling is better than {}'s error handing...",
+                        enemy.name, caller.name
+                    );
+                    attack(caller, 80);
+                    attack(enemy, (20 as f64 * attack_multiplier) as u32);
+                    println!("{} took more damage", caller.name);
+                } else {
+                    println!("Both languages have equal error handling abilities");
+                    attack(caller, 20);
+                    attack(enemy, (20 as f64 * attack_multiplier) as u32);
+                }
             }
         }
     }

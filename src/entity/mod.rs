@@ -1,3 +1,6 @@
+mod cpp_entity;
+pub use cpp_entity::CppEntity;
+
 mod rust_entity;
 pub use rust_entity::RustEntity;
 
@@ -17,6 +20,7 @@ pub struct Entity {
     attack: u32,
     defense: u32,
     accuracy: u32,
+    error_handling: u32,
     moves: Vec<Move>,
     weaknesses: Vec<Move>,
 }
@@ -29,6 +33,7 @@ impl Entity {
         attack: u32,
         defense: u32,
         accuracy: u32,
+        error_handling: u32,
         moves: Vec<Move>,
         weaknesses: Vec<Move>,
     ) -> Self {
@@ -40,6 +45,7 @@ impl Entity {
             attack,
             defense,
             accuracy,
+            error_handling,
             moves,
             weaknesses,
         }
@@ -86,7 +92,7 @@ impl Entity {
             println!("{} missed", self.name);
             return Ok(());
         }
-        let attack_multiplier: f64 = self.attack as f64 / 100.0;
+        let attack_multiplier: f64 = self.attack as f64 / 100.0 + 1.0;
         mv.execute(self, target, attack_multiplier);
         Ok(())
     }
@@ -106,6 +112,7 @@ impl Entity {
                 }
                 &mut self.accuracy
             }
+            Stat::ErrorHandling => &mut self.error_handling,
         };
 
         if amount < 0 && amount.abs() > *stat_to_change as i32 {
@@ -114,12 +121,21 @@ impl Entity {
 
         *stat_to_change = (*stat_to_change as i32 + final_amount) as u32;
     }
+    pub fn get_stat(&self, stat: Stat) -> u32 {
+        match stat {
+            Stat::Attack => self.attack,
+            Stat::Defense => self.defense,
+            Stat::Accuracy => self.accuracy,
+            Stat::ErrorHandling => self.error_handling,
+        }
+    }
 }
 
 pub enum Stat {
     Attack,
     Defense,
     Accuracy,
+    ErrorHandling,
 }
 
 #[cfg(test)]
