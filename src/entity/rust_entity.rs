@@ -1,14 +1,12 @@
-use super::{Entity, EntityName, EntityType};
+use super::{Entity, EntityBuilder, EntityType};
 use crate::moves::Move;
 
 pub struct RustEntity;
 
-const WEAKNESSES: Vec<Move> = vec![];
-
-impl EntityType for RustEntity {
-    fn new(level: u32) -> Entity {
+impl EntityBuilder for RustEntity {
+    fn build(level: u32) -> Entity {
         Entity::new(
-            EntityName::Rust,
+            EntityType::Rust,
             200,
             level,
             10,
@@ -16,7 +14,8 @@ impl EntityType for RustEntity {
             99,
             50,
             vec![Move::IntParse],
-            WEAKNESSES,
+            vec![],
+            vec![Move::Speed],
         )
     }
 }
