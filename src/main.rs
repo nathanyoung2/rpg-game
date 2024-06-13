@@ -12,7 +12,7 @@ fn main() {
         println!("Enemy Health: {}/{}", enemy.health, enemy.max_health);
 
         if rpg_game::take_moves(&mut player, &mut enemy) {
-            continue;
+            break;
         }
     }
 }

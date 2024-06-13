@@ -20,10 +20,33 @@ impl fmt::Display for Move {
 impl Move {
     /// Execute itself.
     /// Each move has unique functionality.
-    pub fn execute(&self, caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
+    pub fn execute(
+        &self,
+        caller: &mut Entity,
+        enemy: &mut Entity,
+        attack_multiplier: f64,
+        is_super_effective: bool,
+        is_not_effective: bool,
+    ) {
+        let multiplier = if is_super_effective {
+            1.5
+        } else if is_not_effective {
+            0.5
+        } else {
+            1.0
+        };
+
         match self {
-            Move::IntParse => int_parse_move(caller, enemy, attack_multiplier),
-            Move::Speed => speed_move(caller, enemy, attack_multiplier),
+            Move::IntParse => int_parse_move(caller, enemy, attack_multiplier * multiplier),
+            Move::Speed => speed_move(caller, enemy, attack_multiplier * multiplier),
+        }
+
+        if is_not_effective {
+            println!("It wasn't very effective");
+        }
+
+        if is_super_effective {
+            println!("It was super effective");
         }
     }
 
@@ -52,7 +75,7 @@ fn speed_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
 // defines the behavior of the Parse an integer move.
 fn int_parse_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
     // define damage constants.
-    const LARGER_DAMAGE: u32 = 65;
+    const LARGER_DAMAGE: u32 = 50;
     const SMALLER_DAMAGE: u32 = 15;
 
     println!(

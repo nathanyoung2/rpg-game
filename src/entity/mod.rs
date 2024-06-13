@@ -126,11 +126,19 @@ impl Entity {
             return;
         }
 
-        // calculate attack multiplier
+        // calculate damage multipliers
         let attack_multiplier: f64 = self.attack as f64 / 100.0 + 1.0;
+        let is_super_effective = self.weaknesses.contains(&mv);
+        let is_not_effective = self.strengths.contains(&mv);
 
         // execute the move
-        mv.execute(self, target, attack_multiplier);
+        mv.execute(
+            self,
+            target,
+            attack_multiplier,
+            is_super_effective,
+            is_not_effective,
+        );
     }
 
     pub fn get_moves(&self) -> &Vec<Move> {
