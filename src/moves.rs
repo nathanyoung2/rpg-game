@@ -1,10 +1,11 @@
-use crate::entity::{Entity, EntityType};
+use crate::entity::{Entity, EntityType, Stat};
 use std::fmt;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum Move {
     IntParse,
     Speed,
+    MultiThread,
 }
 
 impl fmt::Display for Move {
@@ -13,6 +14,7 @@ impl fmt::Display for Move {
         match self {
             Move::IntParse => write!(f, "Parse an integer"),
             Move::Speed => write!(f, "Compile fast"),
+            Move::MultiThread => write!(f, "Multi Thread"),
         }
     }
 }
@@ -28,6 +30,7 @@ impl Move {
         is_super_effective: bool,
         is_not_effective: bool,
     ) {
+        // get the effectiveness multiplier.
         let multiplier = if is_super_effective {
             1.5
         } else if is_not_effective {
@@ -36,9 +39,11 @@ impl Move {
             1.0
         };
 
+        // call the functions for the move behavior
         match self {
             Move::IntParse => int_parse_move(caller, enemy, attack_multiplier * multiplier),
             Move::Speed => speed_move(caller, enemy, attack_multiplier * multiplier),
+            Move::MultiThread => multi_thread_move(enemy),
         }
 
         if is_not_effective {
@@ -61,6 +66,27 @@ impl Move {
     }
 }
 
+/// Execute the 'Multi Thread' move
+fn multi_thread_move(enemy: &mut Entity) {
+    // Define constants
+    const ACCURACY_CHANGE: i32 = -10;
+
+    // check if the move has no effect.
+    if let EntityType::Rust = enemy.entity_type {
+        println!("But it had no effect");
+        return;
+    };
+
+    println!(
+        "A race condition was overlooked, the enemy {}'s accuracy has fallen due to undefined behavior",
+        enemy
+    );
+
+    // execute the move
+    enemy.change_stat(Stat::Accuracy, ACCURACY_CHANGE);
+}
+
+/// Execute the 'Compile Fast' move.
 fn speed_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
     // define damage constant.
     const DAMAGE: f64 = 35.0;
@@ -72,7 +98,7 @@ fn speed_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
     enemy.damage((DAMAGE * attack_multiplier) as u32, Some(Move::Speed));
 }
 
-// defines the behavior of the Parse an integer move.
+/// Execute the 'Parse an Integer' move.
 fn int_parse_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
     // define damage constants.
     const LARGER_DAMAGE: u32 = 50;
@@ -129,17 +155,5 @@ fn int_parse_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f6
             (SMALLER_DAMAGE as f64 * attack_multiplier) as u32,
             Some(Move::IntParse),
         );
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct MoveNotFoundError;
-
-impl fmt::Display for MoveNotFoundError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "The index specified is outside of the range of the entity's moves",
-        )
     }
 }

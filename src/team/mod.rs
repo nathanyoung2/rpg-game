@@ -1,0 +1,29 @@
+use crate::entity::Entity;
+
+pub struct Team {
+    entities: Vec<Entity>,
+    active: usize,
+}
+
+impl Team {
+    pub fn new() -> Self {
+        Team {
+            entities: Vec::with_capacity(6),
+            active: 0,
+        }
+    }
+
+    pub fn set_active(&mut self, index: usize) {
+        if index < self.entities.len() {
+            self.active = index;
+        }
+    }
+
+    pub fn get_active(&mut self) -> Option<&mut Entity> {
+        Some(self.entities.get_mut(self.active)?)
+    }
+
+    pub fn push(&mut self, entity: Entity) {
+        self.entities.push(entity);
+    }
+}

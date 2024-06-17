@@ -13,7 +13,7 @@ impl EntityBuilder for RustEntity {
             30,
             99,
             50,
-            vec![Move::IntParse],
+            vec![Move::IntParse, Move::MultiThread],
             vec![],
             vec![Move::Speed],
         )

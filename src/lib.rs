@@ -1,5 +1,8 @@
 pub mod entity;
 pub mod moves;
+mod team;
+
+pub use team::Team;
 
 use entity::Entity;
 use std::io;
@@ -77,6 +80,7 @@ fn player_move(player: &mut Entity) -> u8 {
                 continue;
             }
         };
+
         player.queue_move(mv);
         return mv.get_priority();
     }

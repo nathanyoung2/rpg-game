@@ -7,7 +7,6 @@ mod rust_entity;
 pub use rust_entity::RustEntity;
 
 use crate::moves::Move;
-use crate::moves::MoveNotFoundError;
 use rand::prelude::*;
 
 /// trait for any
@@ -15,12 +14,14 @@ pub trait EntityBuilder {
     fn build(level: u32) -> Entity;
 }
 
+#[derive(PartialEq)]
 pub enum EntityType {
     Rust,
     Cpp,
 }
 
 /// holds stats for entities for battles.
+#[derive(PartialEq)]
 pub struct Entity {
     pub health: u32,
     pub max_health: u32,
@@ -34,6 +35,12 @@ pub struct Entity {
     weaknesses: Vec<Move>,
     strengths: Vec<Move>,
     queued_move: Option<Move>,
+}
+
+pub enum Stat {
+    Attack,
+    Defense,
+    Accuracy,
 }
 
 impl fmt::Display for Entity {
@@ -81,6 +88,26 @@ impl Entity {
 
     fn accuracy_roll(&self) -> bool {
         rand::thread_rng().gen_ratio(self.accuracy, 100)
+    }
+
+    pub fn change_stat(&mut self, stat: Stat, amount: i32) {
+        // define min and maxes.
+        let mut max = i32::MAX;
+        let min = 5;
+
+        // get the stat to change.
+        let stat_to_change = match stat {
+            Stat::Accuracy => {
+                max = 100;
+                &mut self.accuracy
+            }
+            Stat::Attack => &mut self.attack,
+            Stat::Defense => &mut self.defense,
+        };
+
+        // clamp the final amount within the min and max.
+        let final_amount = (*stat_to_change as i32 + amount).clamp(min, max);
+        *stat_to_change = final_amount as u32;
     }
 
     pub fn queue_move(&mut self, mv: Move) {
