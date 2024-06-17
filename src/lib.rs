@@ -6,8 +6,47 @@ pub use team::Team;
 
 use entity::Entity;
 use std::io;
+use std::num::ParseIntError;
 
 use rand::prelude::*;
+
+// Switch the player's character.
+fn switch_player(team: &mut Team) {
+    for (i, entity) in team.entities.iter().enumerate() {
+        println!("{}, {}", i, entity);
+    }
+
+    let input: usize = match get_int_input() {
+        Ok(i) => i,
+        Err(_) => return,
+    };
+
+    team.set_active(input);
+}
+
+pub fn check_switch_character(team: &mut Team) {
+    println!("Would you like to switch characters [1]");
+
+    let input = match get_int_input() {
+        Ok(i) => i,
+        Err(_) => return,
+    };
+    println!("{input}");
+
+    if input == 1 {
+        switch_player(team);
+    }
+}
+
+fn get_int_input() -> Result<usize, ParseIntError> {
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .expect("Could not read line");
+
+    let input: usize = input.trim().parse()?;
+    Ok(input)
+}
 
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
@@ -60,14 +99,8 @@ fn player_move(player: &mut Entity) -> u8 {
             println!("{}: {}", i, mv);
         }
 
-        // get user input and bind to input.
-        let mut input = String::new();
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Could not read the line");
-
         // parse the input to an integer
-        let i: usize = match input.trim_end().parse() {
+        let i: usize = match get_int_input() {
             Ok(i) => i,
             Err(_) => continue,
         };

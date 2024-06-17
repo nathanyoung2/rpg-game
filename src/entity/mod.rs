@@ -6,6 +6,9 @@ pub use cpp_entity::CppEntity;
 mod rust_entity;
 pub use rust_entity::RustEntity;
 
+mod python_entity;
+pub use python_entity::PythonEntity;
+
 use crate::moves::Move;
 use rand::prelude::*;
 
@@ -18,6 +21,7 @@ pub trait EntityBuilder {
 pub enum EntityType {
     Rust,
     Cpp,
+    Python,
 }
 
 /// holds stats for entities for battles.
@@ -48,6 +52,7 @@ impl fmt::Display for Entity {
         match self.entity_type {
             EntityType::Rust => write!(f, "Rust"),
             EntityType::Cpp => write!(f, "C++"),
+            EntityType::Python => write!(f, "Python"),
         }
     }
 }

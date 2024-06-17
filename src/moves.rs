@@ -6,6 +6,7 @@ pub enum Move {
     IntParse,
     Speed,
     MultiThread,
+    Deadline,
 }
 
 impl fmt::Display for Move {
@@ -15,6 +16,7 @@ impl fmt::Display for Move {
             Move::IntParse => write!(f, "Parse an integer"),
             Move::Speed => write!(f, "Compile fast"),
             Move::MultiThread => write!(f, "Multi Thread"),
+            Move::Deadline => write!(f, "Deadline"),
         }
     }
 }
@@ -44,6 +46,7 @@ impl Move {
             Move::IntParse => int_parse_move(caller, enemy, attack_multiplier * multiplier),
             Move::Speed => speed_move(caller, enemy, attack_multiplier * multiplier),
             Move::MultiThread => multi_thread_move(enemy),
+            Move::Deadline => deadline_move(caller, enemy, attack_multiplier * multiplier),
         }
 
         if is_not_effective {
@@ -64,6 +67,17 @@ impl Move {
         }
         priority
     }
+}
+
+fn deadline_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f64) {
+    const DAMAGE: f64 = 30.0;
+    println!("{} and {} needed to meet a deadline", caller, enemy);
+    println!(
+        "Due to {}'s simplicity, it was able to make the deadline",
+        caller
+    );
+    println!("{} took damage", enemy);
+    enemy.damage((DAMAGE * attack_multiplier) as u32, Some(Move::Deadline));
 }
 
 /// Execute the 'Multi Thread' move
@@ -114,6 +128,7 @@ fn int_parse_move(caller: &mut Entity, enemy: &mut Entity, attack_multiplier: f6
         return match name {
             EntityType::Rust => "Rust returned a result type that can be matched on.",
             EntityType::Cpp => "C++ needed a catch block to avoid a runtime error.",
+            EntityType::Python => "Python needed a catch block to avoid a runtime error.",
         };
     };
 

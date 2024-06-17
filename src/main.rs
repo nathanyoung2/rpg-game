@@ -1,11 +1,11 @@
-use rpg_game::entity::{CppEntity, EntityBuilder, RustEntity};
-use rpg_game::Team;
+use rpg_game::entity::{CppEntity, EntityBuilder, PythonEntity, RustEntity};
+use rpg_game::{check_switch_character, Team};
 
 fn main() {
     // create player and enemy for prototype.
     let mut player_team = Team::new();
-    let player_rust = RustEntity::build(0);
-    player_team.push(player_rust);
+    player_team.push(RustEntity::build(0));
+    player_team.push(PythonEntity::build(0));
 
     let mut enemy_team = Team::new();
     let enemy_cpp = CppEntity::build(0);
@@ -13,6 +13,7 @@ fn main() {
 
     // game loop
     loop {
+        check_switch_character(&mut player_team);
         // get active player and enemy.
         let player = player_team
             .get_active()

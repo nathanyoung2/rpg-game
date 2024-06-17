@@ -1,7 +1,7 @@
 use crate::entity::Entity;
 
 pub struct Team {
-    entities: Vec<Entity>,
+    pub entities: Vec<Entity>,
     active: usize,
 }
 
