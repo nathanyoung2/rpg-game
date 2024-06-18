@@ -10,8 +10,10 @@ use std::num::ParseIntError;
 
 use rand::prelude::*;
 
+use moves::Move;
+
 // Switch the player's character.
-fn switch_player(team: &mut Team) {
+pub fn switch_player(team: &mut Team) {
     for (i, entity) in team.entities.iter().enumerate() {
         println!("{}, {}", i, entity);
     }
@@ -24,17 +26,31 @@ fn switch_player(team: &mut Team) {
     team.set_active(input);
 }
 
-pub fn check_switch_character(team: &mut Team) {
-    println!("Would you like to switch characters [1]");
+pub enum ActionType {
+    Attack,
+    Switch,
+    Forfeit,
+}
 
-    let input = match get_int_input() {
-        Ok(i) => i,
-        Err(_) => return,
+pub fn get_battle_action() -> ActionType {
+    println!("[0]: Attack");
+    println!("[1]: Switch characters");
+    println!("[2]: Forfeit");
+
+    let input: usize = loop {
+        match get_int_input() {
+            Ok(i) => break i,
+            Err(_) => continue,
+        }
     };
-    println!("{input}");
 
     if input == 1 {
-        switch_player(team);
+        return ActionType::Switch;
+    }
+    if input == 2 {
+        return ActionType::Forfeit;
+    } else {
+        return ActionType::Attack;
     }
 }
 
@@ -50,10 +66,12 @@ fn get_int_input() -> Result<usize, ParseIntError> {
 
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
-pub fn take_moves(player: &mut Entity, enemy: &mut Entity) -> bool {
-    let player_move_priority = player_move(player);
-    let enemy_move_priority = enemy_move(enemy);
-
+pub fn take_moves(
+    player: &mut Entity,
+    player_priority: MovePriority,
+    enemy: &mut Entity,
+    enemy_priority: MovePriority,
+) -> bool {
     let check = |player: &Entity, enemy: &Entity| -> bool {
         if enemy.health == 0 {
             println!("The enemy has died, you win");
@@ -90,8 +108,11 @@ pub fn take_moves(player: &mut Entity, enemy: &mut Entity) -> bool {
     false
 }
 
+#[derive(PartialEq, PartialOrd)]
+struct MovePriority(u8);
+
 /// Get user input for a move, then execute it against the enemy.
-fn player_move(player: &mut Entity) -> u8 {
+fn player_move(player: &mut Entity) -> MovePriority {
     loop {
         // print out the options
         println!("Choose your move: ");
@@ -115,14 +136,14 @@ fn player_move(player: &mut Entity) -> u8 {
         };
 
         player.queue_move(mv);
-        return mv.get_priority();
+        return MovePriority(mv.get_priority());
     }
 }
 
-fn enemy_move(enemy: &mut Entity) -> u8 {
+fn enemy_move(enemy: &mut Entity) -> MovePriority {
     let i = rand::thread_rng().gen_range(0..=enemy.get_moves().len() - 1);
     let mv = enemy.get_moves().get(i).unwrap().clone();
 
     enemy.queue_move(mv);
-    mv.get_priority()
+    MovePriority(mv.get_priority())
 }
