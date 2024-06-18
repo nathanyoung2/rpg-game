@@ -10,6 +10,8 @@ mod python_entity;
 pub use python_entity::PythonEntity;
 
 use crate::moves::Move;
+use crate::moves::MoveData;
+
 use rand::prelude::*;
 
 /// trait for any
@@ -25,7 +27,6 @@ pub enum EntityType {
 }
 
 /// holds stats for entities for battles.
-#[derive(PartialEq)]
 pub struct Entity {
     pub health: u32,
     pub max_health: u32,
@@ -38,7 +39,13 @@ pub struct Entity {
     moves: Vec<Move>,
     weaknesses: Vec<Move>,
     strengths: Vec<Move>,
-    queued_move: Option<Move>,
+    queued_move: Option<MoveData>,
+}
+
+impl PartialEq for Entity {
+    fn eq(&self, other: &Self) -> bool {
+        self.entity_type == other.entity_type
+    }
 }
 
 pub enum Stat {
@@ -116,7 +123,14 @@ impl Entity {
     }
 
     pub fn queue_move(&mut self, mv: Move) {
-        self.queued_move = Some(mv);
+        self.queued_move = Some(MoveData {
+            move_type: mv,
+            priority: mv.get_priority(),
+        });
+    }
+
+    pub fn get_move_priority(&self) -> Option<u8> {
+        Some(self.queued_move?.priority)
     }
 
     pub fn damage(&mut self, damage: u32, applied_move: Option<Move>) {
@@ -146,7 +160,7 @@ impl Entity {
     pub fn execute_move(&mut self, target: &mut Entity) {
         // get the move from the queue
         let mv = match self.queued_move {
-            Some(mv) => mv,
+            Some(mv) => mv.move_type,
             None => return,
         };
 

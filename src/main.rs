@@ -13,21 +13,23 @@ fn main() {
 
     // game loop
     loop {
+        // get active player and enemy.
+        let player = player_team
+            .get_active()
+            .expect("Active player has somehow been destroyed");
+
+        let enemy = enemy_team
+            .get_active()
+            .expect("Active enemy has somehow been destroyed");
+
+        // display player and enemy health stats
+        println!("Player Health: {}/{}", player.health, player.max_health);
+        println!("Enemy Health: {}/{}", enemy.health, enemy.max_health);
+
         let battle_action = rpg_game::get_battle_action();
 
         if let ActionType::Attack = battle_action {
-            // get active player and enemy.
-            let player = player_team
-                .get_active()
-                .expect("Active player has somehow been destroyed");
-
-            let enemy = enemy_team
-                .get_active()
-                .expect("Active enemy has somehow been destroyed");
-
-            // display player and enemy health stats
-            println!("Player Health: {}/{}", player.health, player.max_health);
-            println!("Enemy Health: {}/{}", enemy.health, enemy.max_health);
+            rpg_game::queue_player_move(player);
         }
 
         if let ActionType::Switch = battle_action {
@@ -39,7 +41,18 @@ fn main() {
             break;
         }
 
-        if rpg_game::take_moves(player, enemy) {
+        // get active player and enemy.
+        let player = player_team
+            .get_active()
+            .expect("Active player has somehow been destroyed");
+
+        let enemy = enemy_team
+            .get_active()
+            .expect("Active enemy has somehow been destroyed");
+
+        rpg_game::queue_enemy_move(enemy);
+
+        if rpg_game::execute_moves(player, enemy) {
             break;
         }
     }

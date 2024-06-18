@@ -1,12 +1,18 @@
 use crate::entity::{Entity, EntityType, Stat};
 use std::fmt;
 
-#[derive(PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone, Debug)]
 pub enum Move {
     IntParse,
     Speed,
     MultiThread,
     Deadline,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct MoveData {
+    pub move_type: Move,
+    pub priority: u8,
 }
 
 impl fmt::Display for Move {

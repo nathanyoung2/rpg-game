@@ -1,5 +1,6 @@
 pub mod entity;
 pub mod moves;
+
 mod team;
 
 pub use team::Team;
@@ -9,8 +10,6 @@ use std::io;
 use std::num::ParseIntError;
 
 use rand::prelude::*;
-
-use moves::Move;
 
 // Switch the player's character.
 pub fn switch_player(team: &mut Team) {
@@ -66,12 +65,17 @@ fn get_int_input() -> Result<usize, ParseIntError> {
 
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
-pub fn take_moves(
-    player: &mut Entity,
-    player_priority: MovePriority,
-    enemy: &mut Entity,
-    enemy_priority: MovePriority,
-) -> bool {
+pub fn execute_moves(player: &mut Entity, enemy: &mut Entity) -> bool {
+    let player_priority = match player.get_move_priority() {
+        Some(priority) => priority,
+        None => 0,
+    };
+
+    let enemy_priority = match enemy.get_move_priority() {
+        Some(priority) => priority,
+        None => 0,
+    };
+
     let check = |player: &Entity, enemy: &Entity| -> bool {
         if enemy.health == 0 {
             println!("The enemy has died, you win");
@@ -83,7 +87,7 @@ pub fn take_moves(
         true
     };
 
-    match player_move_priority >= enemy_move_priority {
+    match player_priority >= enemy_priority {
         true => {
             player.execute_move(enemy);
             if check(player, enemy) {
@@ -108,11 +112,8 @@ pub fn take_moves(
     false
 }
 
-#[derive(PartialEq, PartialOrd)]
-struct MovePriority(u8);
-
 /// Get user input for a move, then execute it against the enemy.
-fn player_move(player: &mut Entity) -> MovePriority {
+pub fn queue_player_move(player: &mut Entity) {
     loop {
         // print out the options
         println!("Choose your move: ");
@@ -136,14 +137,13 @@ fn player_move(player: &mut Entity) -> MovePriority {
         };
 
         player.queue_move(mv);
-        return MovePriority(mv.get_priority());
+        break;
     }
 }
 
-fn enemy_move(enemy: &mut Entity) -> MovePriority {
+pub fn queue_enemy_move(enemy: &mut Entity) {
     let i = rand::thread_rng().gen_range(0..=enemy.get_moves().len() - 1);
     let mv = enemy.get_moves().get(i).unwrap().clone();
 
     enemy.queue_move(mv);
-    MovePriority(mv.get_priority())
 }
