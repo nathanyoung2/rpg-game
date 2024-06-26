@@ -197,6 +197,22 @@ mod tests {
     use super::*;
 
     #[test]
+    fn queue_move_test() {
+        let mut plr = RustEntity::build(0);
+        plr.queue_move(Move::MultiThread);
+        assert_eq!(plr.queued_move, Some(Move::MultiThread));
+    }
+
+    #[test]
+    fn move_execution_test() {
+        let mut plr = RustEntity::build(0);
+        let mut target = RustEntity::build(0);
+
+        plr.queue_move(Move::MultiThread);
+        plr.execute_move(&mut target);
+    }
+
+    #[test]
     fn take_damage() {
         let mut player = RustEntity::build(0);
         assert_eq!(player.health, 200);
