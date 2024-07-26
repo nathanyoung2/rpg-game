@@ -1,8 +1,11 @@
 pub mod entity;
 pub mod moves;
+pub mod text;
 
+mod battle_state;
 mod team;
 
+pub use battle_state::BattleState;
 pub use team::Team;
 
 use entity::Entity;
