@@ -20,10 +20,10 @@ fn main() -> GameResult {
         ..Default::default()
     };
 
-    let (ctx, event_loop) = ContextBuilder::new("rpg_game", "Nathan Young")
+    let (mut ctx, event_loop) = ContextBuilder::new("rpg_game", "Nathan Young")
         .window_mode(window_mode)
         .build()?;
 
-    let state = BattleState::new(player_team, enemy_team);
+    let state = BattleState::new(&mut ctx, player_team, enemy_team);
     event::run(ctx, event_loop, state)
 }

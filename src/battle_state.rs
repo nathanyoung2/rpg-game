@@ -1,8 +1,8 @@
+use ggegui::{egui, Gui};
 use ggez::event::EventHandler;
 use ggez::glam::Vec2;
 use ggez::graphics::{self, Color, DrawMode, Mesh, Rect, Text};
 use ggez::{Context, GameResult};
-use ggegui::{egui, Gui};
 
 use crate::text::TextQueue;
 use crate::Team;
@@ -22,11 +22,12 @@ pub struct BattleState {
 
 impl BattleState {
     // create the state
-    pub fn new(player_team: Team, enemy_team: Team) -> Self {
+    pub fn new(ctx: &mut Context, player_team: Team, enemy_team: Team) -> Self {
         BattleState {
             player_team,
             enemy_team,
             text_queue: TextQueue::new(),
+            gui: Gui::new(ctx),
         }
     }
 
@@ -42,20 +43,6 @@ impl BattleState {
         };
 
         team.set_active(input);
-    }
-
-    fn get_battle_action() -> Option<ActionType> {
-        // take button input
-
-        if input == 1 {
-            return Some(ActionType::Switch);
-        }
-        if input == 2 {
-            return Some(ActionType::Forfeit);
-        } else {
-            return Some(ActionType::Attack);
-        }
-        None,
     }
 
     /// Execute moves of the player and enemy.
@@ -108,12 +95,12 @@ impl BattleState {
     }
 
     /// Get user input for a move, then execute it against the enemy.
-    fn queue_player_move(player: &mut Entity) {
+    fn queue_player_move(&mut self, player: &mut Entity) {
         loop {
             // print out the options
-            println!("Choose your move: ");
+            self.text_queue.add("Choose your move: ");
             for (i, mv) in player.get_moves().iter().enumerate() {
-                println!("{}: {}", i, mv);
+                self.text_queue.add(format!("{}: {}", i, mv).as_str());
             }
 
             // parse the input to an integer
@@ -126,7 +113,8 @@ impl BattleState {
             let mv = match player.get_moves().get(i) {
                 Some(mv) => mv.clone(),
                 None => {
-                    println!("Move was not found in the player's list of moves");
+                    self.text_queue
+                        .add("Move was not found in the player's list of moves");
                     continue;
                 }
             };
@@ -142,11 +130,16 @@ impl BattleState {
 
         enemy.queue_move(mv);
     }
+
+    fn get_battle_action() -> Option<ActionType> {
+        Some(ActionType::Attack)
+    }
 }
 
 impl EventHandler<ggez::GameError> for BattleState {
     fn update(&mut self, ctx: &mut Context) -> GameResult {
         let gui_ctx = self.gui.ctx();
+        self.text_queue.add("Choose your action");
 
         egui::Window::new("BattleInterface").show(&gui_ctx, |ui| {
             if self.text_queue.ready {
@@ -178,7 +171,7 @@ impl EventHandler<ggez::GameError> for BattleState {
             .expect("Active enemy has somehow been destroyed");
 
         if let ActionType::Attack = battle_action {
-            Self::queue_player_move(player);
+            self.queue_player_move(player);
         }
 
         if let ActionType::Forfeit = battle_action {
@@ -199,17 +192,6 @@ impl EventHandler<ggez::GameError> for BattleState {
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         let mut canvas =
             graphics::Canvas::from_frame(ctx, graphics::Color::from([0.0, 0.0, 0.0, 1.0]));
-        if self.text_queue.ready {
-            let current_text = match self.text_queue.get_current() {
-                Some(text) => text,
-                None => {
-                    return Err(ggez::GameError::CustomError(
-                        "Text was not there".to_string(),
-                    ))
-                }
-            };
-            canvas.draw(&current_text, Vec2::new(300.0, 300.0));
-        }
         canvas.finish(ctx)
     }
 }
