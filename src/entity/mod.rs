@@ -13,13 +13,14 @@ use crate::moves::Move;
 use crate::moves::MoveData;
 
 use rand::prelude::*;
+use std::collections::VecDeque;
 
 /// trait for any
 pub trait EntityBuilder {
     fn build(level: u32) -> Entity;
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum EntityType {
     Rust,
     Cpp,
@@ -27,6 +28,7 @@ pub enum EntityType {
 }
 
 /// holds stats for entities for battles.
+#[derive(Clone)]
 pub struct Entity {
     pub health: u32,
     pub max_health: u32,
@@ -157,18 +159,18 @@ impl Entity {
         }
     }
 
-    pub fn execute_move(&mut self, target: &mut Entity) {
+    pub fn execute_move(&mut self, target: &mut Entity, text_queue: &mut VecDeque<String>) {
         // get the move from the queue
         let mv = match self.queued_move {
             Some(mv) => mv.move_type,
             None => return,
         };
 
-        println!("{} used {}...", self, mv);
+        text_queue.push_back(format!("{} used {}...", self, mv));
 
         // roll to check if a miss occured,
         if !self.accuracy_roll() {
-            println!("{} missed", self);
+            text_queue.push_back(format!("{} missed", self));
             return;
         }
 
@@ -184,6 +186,7 @@ impl Entity {
             attack_multiplier,
             is_super_effective,
             is_not_effective,
+            text_queue,
         );
     }
 

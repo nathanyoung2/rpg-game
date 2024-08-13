@@ -1,11 +1,13 @@
 pub mod entity;
 pub mod moves;
+pub mod ui;
 
 mod team;
 
 pub use team::Team;
 
 use entity::Entity;
+use std::collections::VecDeque;
 use std::io;
 use std::num::ParseIntError;
 
@@ -29,6 +31,7 @@ pub enum ActionType {
     Attack,
     Switch,
     Forfeit,
+    Wait,
 }
 
 pub fn get_battle_action() -> ActionType {
@@ -65,7 +68,7 @@ fn get_int_input() -> Result<usize, ParseIntError> {
 
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
-pub fn execute_moves(player: &mut Entity, enemy: &mut Entity) -> bool {
+pub fn execute_moves(player: &mut Entity, enemy: &mut Entity, text_queue: &mut VecDeque<String>) {
     let player_priority = match player.get_move_priority() {
         Some(priority) => priority,
         None => 0,
@@ -76,40 +79,16 @@ pub fn execute_moves(player: &mut Entity, enemy: &mut Entity) -> bool {
         None => 0,
     };
 
-    let check = |player: &Entity, enemy: &Entity| -> bool {
-        if enemy.health == 0 {
-            println!("The enemy has died, you win");
-        } else if player.health == 0 {
-            println!("The player has died, you lose");
-        } else {
-            return false;
-        }
-        true
-    };
-
     match player_priority >= enemy_priority {
         true => {
-            player.execute_move(enemy);
-            if check(player, enemy) {
-                return true;
-            };
-            enemy.execute_move(player);
-            if check(player, enemy) {
-                return true;
-            };
+            player.execute_move(enemy, text_queue);
+            enemy.execute_move(player, text_queue);
         }
         false => {
-            enemy.execute_move(player);
-            if check(player, enemy) {
-                return true;
-            };
-            player.execute_move(enemy);
-            if check(player, enemy) {
-                return true;
-            };
+            enemy.execute_move(player, text_queue);
+            player.execute_move(enemy, text_queue);
         }
     };
-    false
 }
 
 /// Get user input for a move, then execute it against the enemy.

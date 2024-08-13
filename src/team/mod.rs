@@ -19,8 +19,8 @@ impl Team {
         }
     }
 
-    pub fn get_active(&mut self) -> Option<&mut Entity> {
-        Some(self.entities.get_mut(self.active)?)
+    pub fn get_active(&mut self) -> Option<Entity> {
+        Some(self.entities[self.active].clone())
     }
 
     pub fn push(&mut self, entity: Entity) {
