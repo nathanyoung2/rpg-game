@@ -1,4 +1,4 @@
-use rpg_game::entity::{CppEntity, EntityBuilder, PythonEntity, RustEntity};
+use rpg_game::entity::{CppEntity, Entity, EntityBuilder, PythonEntity, RustEntity};
 use rpg_game::moves::Move;
 use rpg_game::ui::{Button, EntityStats};
 use rpg_game::{ActionType, Team};
@@ -54,6 +54,7 @@ async fn main() {
 
     let mut text_queue: VecDeque<String> = VecDeque::new();
     let mut debounce = false;
+    let mut debounce_step = false;
 
     // game loop
     loop {
@@ -88,47 +89,53 @@ async fn main() {
 
         // player move state code
         if state == State::Move {
-            let mut player_mv: Option<Move> = None;
-            let mut move_buttons: HashMap<Move, Button> = HashMap::new();
+            move_state(
+                &mut player,
+                &mut enemy,
+                &mut state,
+                &empty_button_texture,
+                &mut debounce,
+                &mut text_queue,
+            )
+        }
 
-            // add buttons for all the moves
-            for (i, mv) in player.get_moves().iter().enumerate() {
-                move_buttons.insert(
-                    mv.clone(),
-                    Button::new(&empty_button_texture, 1100.0, 600.0 + (75.0 * (i as f32))),
-                );
+        if player.health == 0 {
+            text_queue.push_back(format!("The player, {}, has fallen.", player));
+            if active_died(&mut player_team, &mut state) {
+                continue;
             }
+            player = player_team
+                .get_active()
+                .expect("Active player has somehow been destroyed");
+        }
 
-            // check if any of the buttons are clicked
-            for (mv, mut button) in move_buttons.into_iter() {
-                button.draw();
-                if button.clicked() && !debounce {
-                    debounce = true;
-                    player_mv = Some(mv);
-                } else if debounce {
-                    debounce = false;
-                }
-
-                // draw text on top of the button
-                draw_text(
-                    format!("{}", mv).as_str(),
-                    button.xpos + 10.0,
-                    button.ypos + 40.0,
-                    30.0,
-                    WHITE,
-                );
+        if enemy.health == 0 {
+            text_queue.push_back(format!("The enemy, {}, has fallen.", enemy));
+            if active_died(&mut enemy_team, &mut state) {
+                continue;
             }
+            enemy = enemy_team
+                .get_active()
+                .expect("Active enemy has somehow been destroyed");
+        }
 
-            if let Some(mv) = player_mv {
-                player.queue_move(mv);
-                rpg_game::queue_enemy_move(&mut enemy);
-                rpg_game::execute_moves(&mut player, &mut enemy, &mut text_queue);
-                state = State::Dialogue;
-            }
+        if debounce && debounce_step {
+            debounce = false;
+            debounce_step = false;
+        } else if debounce {
+            debounce_step = true
         }
 
         next_frame().await;
     }
+}
+
+fn active_died(team: &mut Team, state: &mut State) -> bool {
+    if let Err(_) = team.set_active(team.get_active_index() + 1) {
+        *state = State::Dialogue;
+        return true;
+    };
+    false
 }
 
 fn dialogue(text_queue: &mut VecDeque<String>, state: &mut State) {
@@ -146,6 +153,51 @@ fn dialogue(text_queue: &mut VecDeque<String>, state: &mut State) {
     }
 }
 
+fn move_state(
+    player: &mut Entity,
+    enemy: &mut Entity,
+    state: &mut State,
+    empty_button_texture: &Texture2D,
+    debounce: &mut bool,
+    text_queue: &mut VecDeque<String>,
+) {
+    let mut player_mv: Option<Move> = None;
+    let mut move_buttons: HashMap<Move, Button> = HashMap::new();
+
+    // add buttons for all the moves
+    for (i, mv) in player.get_moves().iter().enumerate() {
+        move_buttons.insert(
+            mv.clone(),
+            Button::new(empty_button_texture, 1100.0, 600.0 + (75.0 * (i as f32))),
+        );
+    }
+
+    // check if any of the buttons are clicked
+    for (mv, mut button) in move_buttons.into_iter() {
+        button.draw();
+        if button.clicked() && !*debounce {
+            *debounce = true;
+            player_mv = Some(mv);
+        }
+
+        // draw text on top of the button
+        draw_text(
+            format!("{}", mv).as_str(),
+            button.xpos + 10.0,
+            button.ypos + 40.0,
+            30.0,
+            WHITE,
+        );
+    }
+
+    if let Some(mv) = player_mv {
+        player.queue_move(mv);
+        rpg_game::queue_enemy_move(enemy);
+        rpg_game::execute_moves(player, enemy, text_queue);
+        *state = State::Dialogue;
+    }
+}
+
 fn wait(
     text_queue: &mut VecDeque<String>,
     state: &mut State,
@@ -160,8 +212,6 @@ fn wait(
     if attack_button.clicked() && !*debounce {
         battle_action = ActionType::Attack;
         *debounce = true;
-    } else if *debounce {
-        *debounce = false;
     }
 
     if let ActionType::Attack = battle_action {

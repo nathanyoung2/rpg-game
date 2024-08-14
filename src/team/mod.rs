@@ -13,14 +13,20 @@ impl Team {
         }
     }
 
-    pub fn set_active(&mut self, index: usize) {
+    pub fn set_active(&mut self, index: usize) -> Result<(), ()> {
         if index < self.entities.len() {
             self.active = index;
+            return Ok(());
         }
+        Err(())
     }
 
     pub fn get_active(&mut self) -> Option<Entity> {
         Some(self.entities[self.active].clone())
+    }
+
+    pub fn get_active_index(&self) -> usize {
+        self.active
     }
 
     pub fn push(&mut self, entity: Entity) {
