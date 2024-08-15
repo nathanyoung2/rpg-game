@@ -8,11 +8,11 @@ use macroquad::prelude::*;
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum State {
     Wait,
     Move,
-    Dialogue,
+    Dialogue(Box<State>),
     End,
 }
 
@@ -39,10 +39,12 @@ async fn main() {
     // load textures
     let empty_button_texture: Texture2D = load_texture("assets/empty-button.png").await.unwrap();
     let attack_button_texture: Texture2D = load_texture("assets/attack-button.png").await.unwrap();
-    let mut attack_button = Button::new(&attack_button_texture, 1100.0, 600.0);
-
+    let switch_button_texture: Texture2D = load_texture("assets/switch-button.png").await.unwrap();
     let health_bar_texture: Texture2D = load_texture("assets/health-bar.png").await.unwrap();
 
+    // create ui elements
+    let mut attack_button = Button::new(&attack_button_texture, 1100.0, 600.0);
+    let mut switch_button = Button::new(&switch_button_texture, 1100.0, 650.0);
     let player_ui = EntityStats::new(100.0, 600.0, &health_bar_texture);
     let enemy_ui = EntityStats::new(600.0, 100.0, &health_bar_texture);
 
@@ -73,50 +75,36 @@ async fn main() {
             format!("{}", enemy).as_str(),
         );
 
-        if state == State::Dialogue {
-            dialogue(&mut text_queue, &mut state);
-        }
-
-        // waiting state code
-        if state == State::Wait {
-            wait(
-                &mut text_queue,
-                &mut state,
-                &mut attack_button,
-                &mut debounce,
-            );
-        }
-
-        // player move state code
-        if state == State::Move {
-            move_state(
-                &mut player,
-                &mut enemy,
-                &mut state,
-                &empty_button_texture,
-                &mut debounce,
-                &mut text_queue,
-            )
-        }
-
-        if player.health == 0 {
-            text_queue.push_back(format!("The player, {}, has fallen.", player));
-            if active_died(&mut player_team, &mut state) {
-                continue;
+        match state {
+            State::Dialogue(ref transition_state) => {
+                let state_clone = transition_state.clone();
+                dialogue(&mut text_queue, &mut state, state_clone);
             }
-            player = player_team
-                .get_active()
-                .expect("Active player has somehow been destroyed");
-        }
 
-        if enemy.health == 0 {
-            text_queue.push_back(format!("The enemy, {}, has fallen.", enemy));
-            if active_died(&mut enemy_team, &mut state) {
-                continue;
+            State::Wait => {
+                wait(
+                    &mut text_queue,
+                    &mut state,
+                    &mut attack_button,
+                    &mut debounce,
+                );
             }
-            enemy = enemy_team
-                .get_active()
-                .expect("Active enemy has somehow been destroyed");
+
+            State::Move => {
+                move_state(
+                    &mut player,
+                    &mut player_team,
+                    &mut enemy,
+                    &mut enemy_team,
+                    &mut state,
+                    &empty_button_texture,
+                    &mut debounce,
+                    &mut text_queue,
+                );
+            }
+            State::End => {
+                break;
+            }
         }
 
         if debounce && debounce_step {
@@ -132,17 +120,17 @@ async fn main() {
 
 fn active_died(team: &mut Team, state: &mut State) -> bool {
     if let Err(_) = team.set_active(team.get_active_index() + 1) {
-        *state = State::Dialogue;
+        *state = State::Dialogue(Box::new(State::End));
         return true;
     };
     false
 }
 
-fn dialogue(text_queue: &mut VecDeque<String>, state: &mut State) {
+fn dialogue(text_queue: &mut VecDeque<String>, state: &mut State, transition_state: Box<State>) {
     let s = match text_queue.get(0) {
         Some(s) => s,
         None => {
-            *state = State::Wait;
+            *state = *transition_state;
             return;
         }
     };
@@ -155,7 +143,9 @@ fn dialogue(text_queue: &mut VecDeque<String>, state: &mut State) {
 
 fn move_state(
     player: &mut Entity,
+    player_team: &mut Team,
     enemy: &mut Entity,
+    enemy_team: &mut Team,
     state: &mut State,
     empty_button_texture: &Texture2D,
     debounce: &mut bool,
@@ -194,7 +184,27 @@ fn move_state(
         player.queue_move(mv);
         rpg_game::queue_enemy_move(enemy);
         rpg_game::execute_moves(player, enemy, text_queue);
-        *state = State::Dialogue;
+        *state = State::Dialogue(Box::new(State::Wait));
+    }
+
+    if player.health == 0 {
+        text_queue.push_back(format!("The player, {}, has fallen.", player));
+        if active_died(player_team, state) {
+            return;
+        }
+        *player = player_team
+            .get_active()
+            .expect("Active player has somehow been destroyed");
+    }
+
+    if enemy.health == 0 {
+        text_queue.push_back(format!("The enemy, {}, has fallen.", enemy));
+        if active_died(enemy_team, state) {
+            return;
+        }
+        *enemy = enemy_team
+            .get_active()
+            .expect("Active enemy has somehow been destroyed");
     }
 }
 
