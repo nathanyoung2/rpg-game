@@ -13,45 +13,6 @@ use std::num::ParseIntError;
 
 use rand::prelude::*;
 
-pub enum ActionType {
-    Attack,
-    Switch,
-    Forfeit,
-    Wait,
-}
-
-pub fn get_battle_action() -> ActionType {
-    println!("[0]: Attack");
-    println!("[1]: Switch characters");
-    println!("[2]: Forfeit");
-
-    let input: usize = loop {
-        match get_int_input() {
-            Ok(i) => break i,
-            Err(_) => continue,
-        }
-    };
-
-    if input == 1 {
-        return ActionType::Switch;
-    }
-    if input == 2 {
-        return ActionType::Forfeit;
-    } else {
-        return ActionType::Attack;
-    }
-}
-
-fn get_int_input() -> Result<usize, ParseIntError> {
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Could not read line");
-
-    let input: usize = input.trim().parse()?;
-    Ok(input)
-}
-
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
 pub fn execute_moves(player: &mut Entity, enemy: &mut Entity, text_queue: &mut VecDeque<String>) {
@@ -75,35 +36,6 @@ pub fn execute_moves(player: &mut Entity, enemy: &mut Entity, text_queue: &mut V
             player.execute_move(enemy, text_queue);
         }
     };
-}
-
-/// Get user input for a move, then execute it against the enemy.
-pub fn queue_player_move(player: &mut Entity) {
-    loop {
-        // print out the options
-        println!("Choose your move: ");
-        for (i, mv) in player.get_moves().iter().enumerate() {
-            println!("{}: {}", i, mv);
-        }
-
-        // parse the input to an integer
-        let i: usize = match get_int_input() {
-            Ok(i) => i,
-            Err(_) => continue,
-        };
-
-        // get the move associated with the index.
-        let mv = match player.get_moves().get(i) {
-            Some(mv) => mv.clone(),
-            None => {
-                println!("Move was not found in the player's list of moves");
-                continue;
-            }
-        };
-
-        player.queue_move(mv);
-        break;
-    }
 }
 
 pub fn queue_enemy_move(enemy: &mut Entity) {

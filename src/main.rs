@@ -1,7 +1,7 @@
-use rpg_game::entity::{CppEntity, Entity, EntityBuilder, PythonEntity, RustEntity};
+use rpg_game::entity::{CppEntity, EntityBuilder, PythonEntity, RustEntity};
 use rpg_game::moves::Move;
 use rpg_game::ui::{Button, ButtonLink, EntityImageParams, EntityStats};
-use rpg_game::{ActionType, Team};
+use rpg_game::Team;
 
 use macroquad::prelude::*;
 
@@ -264,6 +264,7 @@ impl Battle<'_> {
                 return;
             }
         };
+        draw_rectangle(0.0, 675.0, screen_width(), 200.0, BLACK);
         draw_multiline_text(s, 50.0, 725.0, 40.0, Some(1.5), WHITE);
 
         if is_mouse_button_pressed(MouseButton::Left) {
