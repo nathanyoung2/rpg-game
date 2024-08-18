@@ -39,6 +39,11 @@ impl<'a> EntityStats<'a> {
     }
 }
 
+pub struct ButtonLink<'a, T> {
+    pub link: T,
+    pub button: Button<'a>,
+}
+
 pub struct Button<'a> {
     texture: &'a Texture2D,
     pub xpos: f32,

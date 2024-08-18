@@ -21,8 +21,8 @@ impl Team {
         Err(())
     }
 
-    pub fn get_active(&mut self) -> Option<Entity> {
-        Some(self.entities[self.active].clone())
+    pub fn get_active(&mut self) -> Option<&mut Entity> {
+        Some(&mut self.entities[self.active])
     }
 
     pub fn get_active_index(&self) -> usize {

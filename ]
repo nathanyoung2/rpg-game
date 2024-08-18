@@ -18,7 +18,9 @@ enum State {
 }
 
 struct Battle<'a> {
+    player: Entity,
     player_team: Team,
+    enemy: Entity,
     enemy_team: Team,
     state: State,
     debounce: bool,
@@ -59,7 +61,7 @@ async fn main() {
 
     // create ui elements
     let attack_button = Button::new(&attack_button_texture, 1100.0, 600.0);
-    let switch_button = Button::new(&switch_button_texture, 1100.0, 675.0);
+    let switch_button = Button::new(&switch_button_texture, 1100.0, 650.0);
     let player_ui = EntityStats::new(100.0, 600.0, &health_bar_texture);
     let enemy_ui = EntityStats::new(600.0, 100.0, &health_bar_texture);
 
@@ -74,7 +76,9 @@ async fn main() {
     let debounce_step = false;
 
     let mut battle = Battle {
+        player,
         player_team,
+        enemy,
         enemy_team,
         debounce,
         debounce_step,
@@ -92,9 +96,7 @@ async fn main() {
         // refresh frame
         clear_background(BLACK);
 
-        if battle.update() {
-            break;
-        };
+        battle.update();
 
         next_frame().await;
     }
@@ -103,25 +105,15 @@ async fn main() {
 impl Battle<'_> {
     pub fn update(&mut self) -> bool {
         // update player and enemy health.
-        let player = self
-            .player_team
-            .get_active()
-            .expect("Active player has somehow been destroyed");
-
-        let enemy = self
-            .enemy_team
-            .get_active()
-            .expect("Active enemy has somehow been destroyed");
-
         self.player_ui.update(
-            player.health,
-            player.max_health,
-            format!("{}", player).as_str(),
+            self.player.health,
+            self.player.max_health,
+            format!("{}", self.player).as_str(),
         );
         self.enemy_ui.update(
-            enemy.health,
-            enemy.max_health,
-            format!("{}", enemy).as_str(),
+            self.enemy.health,
+            self.enemy.max_health,
+            format!("{}", self.enemy).as_str(),
         );
 
         match self.state {
@@ -138,7 +130,7 @@ impl Battle<'_> {
                 self.move_state();
             }
             State::Switch => {
-                self.switch_state();
+                switch_state();
             }
             State::End => {
                 return true;
@@ -158,7 +150,6 @@ impl Battle<'_> {
     fn wait_state(&mut self) {
         // draw buttons.
         self.attack_button.draw();
-        self.switch_button.draw();
 
         // do action.
         let mut battle_action = ActionType::Wait;
@@ -167,9 +158,8 @@ impl Battle<'_> {
             self.debounce = true;
         }
 
-        if self.switch_button.clicked() && !self.debounce {
+        if self.switch_button.clicked() {
             self.state = State::Switch;
-            self.debounce = true;
         }
 
         if let ActionType::Switch = battle_action {
@@ -186,11 +176,9 @@ impl Battle<'_> {
     fn move_state(&mut self) {
         let mut player_mv: Option<Move> = None;
         let mut move_buttons: HashMap<Move, Button> = HashMap::new();
-        let player = self.player_team.get_active().unwrap();
-        let enemy = self.enemy_team.get_active().unwrap();
 
         // add buttons for all the moves
-        for (i, mv) in player.get_moves().iter().enumerate() {
+        for (i, mv) in self.player.get_moves().iter().enumerate() {
             move_buttons.insert(
                 mv.clone(),
                 Button::new(
@@ -220,30 +208,33 @@ impl Battle<'_> {
         }
 
         if let Some(mv) = player_mv {
-            player.queue_move(mv);
-            rpg_game::queue_enemy_move(enemy);
-            rpg_game::execute_moves(player, enemy, &mut self.text_queue);
+            self.player.queue_move(mv);
+            rpg_game::queue_enemy_move(&mut self.enemy);
+            rpg_game::execute_moves(&mut self.player, &mut self.enemy, &mut self.text_queue);
             self.state = State::Dialogue(Box::new(State::Wait));
         }
 
-        if player.health == 0 {
+        if self.player.health == 0 {
             self.text_queue
-                .push_back(format!("The player, {}, has fallen.", player));
+                .push_back(format!("The player, {}, has fallen.", self.player));
             if active_died(&mut self.player_team, &mut self.state) {
-                self.text_queue
-                    .push_back(String::from("You lost the battle"));
                 return;
             }
+            self.player = self
+                .player_team
+                .get_active()
+                .expect("Active player has somehow been destroyed");
         }
-
-        if enemy.health == 0 {
+        if self.enemy.health == 0 {
             self.text_queue
-                .push_back(format!("The enemy, {}, has fallen.", enemy));
+                .push_back(format!("The enemy, {}, has fallen.", self.enemy));
             if active_died(&mut self.enemy_team, &mut self.state) {
-                self.text_queue
-                    .push_back(String::from("You won the battle, congratulations!"));
                 return;
             }
+            self.enemy = self
+                .enemy_team
+                .get_active()
+                .expect("Active enemy has somehow been destroyed");
         }
     }
 
@@ -263,13 +254,10 @@ impl Battle<'_> {
     }
 
     fn switch_state(&mut self) {
-        let mut links: Vec<ButtonLink<usize>> = Vec::new();
-        for i in 0..self.player_team.entities.len() {
-            if self.player_team.entities[i].health <= 0 {
-                continue;
-            }
-            links.push(ButtonLink {
-                link: i,
+        let mut links: Vec<ButtonLink<Entity>> = Vec::new();
+        for (i, e) in self.player_team.entities.iter() {
+            links.append(ButtonLink {
+                link: e,
                 button: Button::new(
                     &self.empty_button_texture,
                     1100.0,
@@ -279,20 +267,18 @@ impl Battle<'_> {
         }
 
         // check if any of the buttons are clicked
-        for link in links.iter_mut() {
-            link.button.draw();
-            if link.button.clicked() && !self.debounce {
-                self.player_team.set_active(link.link).unwrap();
-                println!("Player set to {}", link.link);
-                self.state = State::Wait;
+        for (mv, mut button) in move_buttons.into_iter() {
+            button.draw();
+            if button.clicked() && !self.debounce {
                 self.debounce = true;
+                player_mv = Some(mv);
             }
 
             // draw text on top of the button
             draw_text(
-                format!("{}", self.player_team.entities[link.link]).as_str(),
-                link.button.xpos + 10.0,
-                link.button.ypos + 40.0,
+                format!("{}", mv).as_str(),
+                button.xpos + 10.0,
+                button.ypos + 40.0,
                 30.0,
                 WHITE,
             );
@@ -301,12 +287,9 @@ impl Battle<'_> {
 }
 
 fn active_died(team: &mut Team, state: &mut State) -> bool {
-    for (i, entity) in team.entities.iter().enumerate() {
-        if entity.health > 0 {
-            team.set_active(i).expect("Unexpected error");
-            return false;
-        }
-    }
-    *state = State::Dialogue(Box::new(State::End));
-    true
+    if let Err(_) = team.set_active(team.get_active_index() + 1) {
+        *state = State::Dialogue(Box::new(State::End));
+        return true;
+    };
+    false
 }

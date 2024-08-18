@@ -9,7 +9,7 @@ impl EntityBuilder for CppEntity {
             EntityType::Cpp,
             200,
             level,
-            20,
+            40,
             20,
             99,
             20,

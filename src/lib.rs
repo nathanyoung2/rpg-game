@@ -13,20 +13,6 @@ use std::num::ParseIntError;
 
 use rand::prelude::*;
 
-// Switch the player's character.
-pub fn switch_player(team: &mut Team) {
-    for (i, entity) in team.entities.iter().enumerate() {
-        println!("{}, {}", i, entity);
-    }
-
-    let input: usize = match get_int_input() {
-        Ok(i) => i,
-        Err(_) => return,
-    };
-
-    team.set_active(input);
-}
-
 pub enum ActionType {
     Attack,
     Switch,
