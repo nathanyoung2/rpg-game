@@ -15,9 +15,11 @@ use crate::moves::MoveData;
 use rand::prelude::*;
 use std::collections::VecDeque;
 
+use macroquad::texture::Texture2D;
+
 /// trait for any
 pub trait EntityBuilder {
-    fn build(level: u32) -> Entity;
+    fn build(level: u32, texture: Option<Texture2D>) -> Entity;
 }
 
 #[derive(PartialEq, Clone)]
@@ -38,6 +40,7 @@ pub struct Entity {
     pub defense: u32,
     pub accuracy: u32,
     pub error_handling: u32,
+    pub texture: Option<Texture2D>,
     moves: Vec<Move>,
     weaknesses: Vec<Move>,
     strengths: Vec<Move>,
@@ -78,6 +81,7 @@ impl Entity {
         moves: Vec<Move>,
         weaknesses: Vec<Move>,
         strengths: Vec<Move>,
+        texture: Option<Texture2D>,
     ) -> Self {
         Entity {
             entity_type,
@@ -92,6 +96,7 @@ impl Entity {
             weaknesses,
             strengths,
             queued_move: None,
+            texture,
         }
     }
 

@@ -1,5 +1,11 @@
 use macroquad::prelude::*;
 
+pub struct EntityImageParams<'a> {
+    pub texture: &'a Option<Texture2D>,
+    pub x: f32,
+    pub y: f32,
+}
+
 pub struct EntityStats<'a> {
     health_bar_texture: &'a Texture2D,
     xpos: f32,
@@ -15,24 +21,42 @@ impl<'a> EntityStats<'a> {
         }
     }
 
-    pub fn update(&self, health: u32, max_health: u32, name: &str) {
-        let bar_y = self.ypos - 10.0;
+    pub fn update(
+        &self,
+        health: u32,
+        max_health: u32,
+        image_params: EntityImageParams,
+        name: &str,
+    ) {
+        let bar_y = self.ypos + 6.0;
         let health_bar_params = DrawTextureParams {
             source: Some(Rect {
-                x: self.xpos,
-                y: bar_y,
+                x: 0.0,
+                y: 0.0,
                 w: self.health_bar_texture.width() * (health as f32 / max_health as f32),
                 h: self.health_bar_texture.height(),
             }),
             ..Default::default()
         };
 
-        draw_text(name, self.xpos, self.ypos, 20.0, WHITE);
+        draw_text(name, self.xpos, self.ypos, 35.0, WHITE);
+
+        draw_text(
+            format!("{}/{}", health, max_health).as_str(),
+            self.xpos + 125.0,
+            self.ypos,
+            35.0,
+            WHITE,
+        );
+
+        if let Some(ref texture) = image_params.texture {
+            draw_texture(texture, image_params.x, image_params.y, WHITE);
+        }
 
         draw_texture_ex(
             self.health_bar_texture,
             self.xpos,
-            self.ypos,
+            bar_y,
             WHITE,
             health_bar_params,
         );

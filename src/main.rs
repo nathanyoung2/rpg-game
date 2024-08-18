@@ -1,6 +1,6 @@
 use rpg_game::entity::{CppEntity, Entity, EntityBuilder, PythonEntity, RustEntity};
 use rpg_game::moves::Move;
-use rpg_game::ui::{Button, ButtonLink, EntityStats};
+use rpg_game::ui::{Button, ButtonLink, EntityImageParams, EntityStats};
 use rpg_game::{ActionType, Team};
 
 use macroquad::prelude::*;
@@ -28,38 +28,39 @@ struct Battle<'a> {
     enemy_ui: EntityStats<'a>,
     attack_button: Button<'a>,
     switch_button: Button<'a>,
+    forfeit_button: Button<'a>,
     empty_button_texture: Texture2D,
 }
 
 #[macroquad::main("RPG Game")]
 async fn main() {
+    // load textures for entities
+    let rust_texture = load_texture("assets/rust.png").await.ok();
+    let python_texture = load_texture("assets/python.png").await.ok();
+    let cpp_texture = load_texture("assets/cpp.png").await.ok();
+
     // create player and enemy teams
     let mut player_team = Team::new();
-    player_team.push(RustEntity::build(0));
-    player_team.push(PythonEntity::build(0));
+    player_team.push(RustEntity::build(0, rust_texture.clone()));
+    player_team.push(PythonEntity::build(0, python_texture.clone()));
 
     let mut enemy_team = Team::new();
-    let enemy_cpp = CppEntity::build(0);
+
+    let enemy_cpp = CppEntity::build(0, cpp_texture.clone());
     enemy_team.push(enemy_cpp);
-
-    // get active player and enemy.
-    let player = player_team
-        .get_active()
-        .expect("Active player has somehow been destroyed");
-
-    let enemy = enemy_team
-        .get_active()
-        .expect("Active enemy has somehow been destroyed");
 
     // load textures
     let empty_button_texture: Texture2D = load_texture("assets/empty-button.png").await.unwrap();
     let attack_button_texture: Texture2D = load_texture("assets/attack-button.png").await.unwrap();
     let switch_button_texture: Texture2D = load_texture("assets/switch-button.png").await.unwrap();
+    let forfeit_button_texture: Texture2D =
+        load_texture("assets/forfeit-button.png").await.unwrap();
     let health_bar_texture: Texture2D = load_texture("assets/health-bar.png").await.unwrap();
 
     // create ui elements
     let attack_button = Button::new(&attack_button_texture, 1100.0, 600.0);
     let switch_button = Button::new(&switch_button_texture, 1100.0, 675.0);
+    let forfeit_button = Button::new(&forfeit_button_texture, 1100.0, 750.0);
     let player_ui = EntityStats::new(100.0, 600.0, &health_bar_texture);
     let enemy_ui = EntityStats::new(600.0, 100.0, &health_bar_texture);
 
@@ -84,6 +85,7 @@ async fn main() {
         enemy_ui,
         attack_button,
         switch_button,
+        forfeit_button,
         empty_button_texture,
     };
 
@@ -116,11 +118,21 @@ impl Battle<'_> {
         self.player_ui.update(
             player.health,
             player.max_health,
+            EntityImageParams {
+                texture: &player.texture,
+                x: 400.0,
+                y: 550.0,
+            },
             format!("{}", player).as_str(),
         );
         self.enemy_ui.update(
             enemy.health,
             enemy.max_health,
+            EntityImageParams {
+                texture: &enemy.texture,
+                x: 900.0,
+                y: 50.0,
+            },
             format!("{}", enemy).as_str(),
         );
 
@@ -159,9 +171,9 @@ impl Battle<'_> {
         // draw buttons.
         self.attack_button.draw();
         self.switch_button.draw();
+        self.forfeit_button.draw();
 
-        // do action.
-        let mut battle_action = ActionType::Wait;
+        // check for button presses and change the state accordingly
         if self.attack_button.clicked() && !self.debounce {
             self.state = State::Move;
             self.debounce = true;
@@ -172,15 +184,12 @@ impl Battle<'_> {
             self.debounce = true;
         }
 
-        if let ActionType::Switch = battle_action {
-            //rpg_game::switch_player(&mut player_team);
-        }
-
-        if let ActionType::Forfeit = battle_action {
+        if self.forfeit_button.clicked() && !self.debounce {
             self.text_queue.push_back(String::from(
                 "You decided that the battle was futile and quit early",
             ));
-            self.state = State::End;
+            self.state = State::Dialogue(Box::new(State::End));
+            self.debounce = true;
         }
     }
     fn move_state(&mut self) {
