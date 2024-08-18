@@ -8,8 +8,6 @@ pub use team::Team;
 
 use entity::Entity;
 use std::collections::VecDeque;
-use std::io;
-use std::num::ParseIntError;
 
 use rand::prelude::*;
 

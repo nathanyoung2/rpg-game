@@ -1,4 +1,4 @@
-use rpg_game::entity::{CppEntity, EntityBuilder, PythonEntity, RustEntity};
+use rpg_game::entity::{CppEntity, EntityBuilder, GoEntity, JsEntity, PythonEntity, RustEntity};
 use rpg_game::moves::Move;
 use rpg_game::ui::{Button, ButtonLink, EntityImageParams, EntityStats};
 use rpg_game::Team;
@@ -38,6 +38,8 @@ async fn main() {
     let rust_texture = load_texture("assets/rust.png").await.ok();
     let python_texture = load_texture("assets/python.png").await.ok();
     let cpp_texture = load_texture("assets/cpp.png").await.ok();
+    let js_texture = load_texture("assets/js.png").await.ok();
+    let go_texture = load_texture("assets/go.png").await.ok();
 
     // create player and enemy teams
     let mut player_team = Team::new();
@@ -45,9 +47,9 @@ async fn main() {
     player_team.push(PythonEntity::build(0, python_texture.clone()));
 
     let mut enemy_team = Team::new();
-
-    let enemy_cpp = CppEntity::build(0, cpp_texture.clone());
-    enemy_team.push(enemy_cpp);
+    enemy_team.push(CppEntity::build(0, cpp_texture.clone()));
+    enemy_team.push(JsEntity::build(0, js_texture.clone()));
+    enemy_team.push(GoEntity::build(0, go_texture.clone()));
 
     // load textures
     let empty_button_texture: Texture2D = load_texture("assets/empty-button.png").await.unwrap();
@@ -205,7 +207,7 @@ impl Battle<'_> {
                 Button::new(
                     &self.empty_button_texture,
                     1100.0,
-                    600.0 + (75.0 * (i as f32)),
+                    550.0 + (75.0 * (i as f32)),
                 ),
             );
         }
@@ -293,7 +295,6 @@ impl Battle<'_> {
             link.button.draw();
             if link.button.clicked() && !self.debounce {
                 self.player_team.set_active(link.link).unwrap();
-                println!("Player set to {}", link.link);
                 self.state = State::Wait;
                 self.debounce = true;
             }

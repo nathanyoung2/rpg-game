@@ -8,6 +8,7 @@ pub enum Move {
     Speed,
     MultiThread,
     Deadline,
+    Async,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -24,6 +25,7 @@ impl fmt::Display for Move {
             Move::Speed => write!(f, "Compile fast"),
             Move::MultiThread => write!(f, "Multi Thread"),
             Move::Deadline => write!(f, "Deadline"),
+            Move::Async => write!(f, "Asynchronous"),
         }
     }
 }
@@ -59,6 +61,7 @@ impl Move {
             Move::Deadline => {
                 deadline_move(caller, enemy, attack_multiplier * multiplier, text_queue)
             }
+            Move::Async => async_move(caller, enemy, attack_multiplier * multiplier, text_queue),
         }
 
         if is_not_effective {
@@ -79,6 +82,35 @@ impl Move {
         }
         priority
     }
+}
+
+fn async_move(
+    caller: &mut Entity,
+    enemy: &mut Entity,
+    attack_multiplier: f64,
+    text_queue: &mut VecDeque<String>,
+) {
+    const DAMAGE: f64 = 30.0;
+    text_queue.push_back(format!(
+        "{} unleashed attacks asynchronously, not needing to \n pause to wait for the last attack to complete.",
+        caller
+    ));
+
+    if enemy.weaknesses.contains(&Move::Async) {
+        text_queue.push_back(format!(
+            "{} wasn't able to see the attacks coming from outside the main thread",
+            enemy,
+        ));
+    }
+
+    if enemy.strengths.contains(&Move::Async) {
+        text_queue.push_back(format!(
+            "{} was running asynchonously on all cpu cores to block the incoming attack",
+            enemy
+        ));
+    }
+
+    enemy.damage((DAMAGE * attack_multiplier) as u32, Some(Move::Async));
 }
 
 fn deadline_move(
@@ -128,7 +160,7 @@ fn speed_move(
     text_queue: &mut VecDeque<String>,
 ) {
     // define damage constant.
-    const DAMAGE: f64 = 35.0;
+    const DAMAGE: f64 = 25.0;
     text_queue.push_back(format!(
         "{} Showed of it's fast compile time and attacked {} first",
         caller, enemy
@@ -145,7 +177,7 @@ fn int_parse_move(
     text_queue: &mut VecDeque<String>,
 ) {
     // define damage constants.
-    const LARGER_DAMAGE: u32 = 50;
+    const LARGER_DAMAGE: u32 = 30;
     const SMALLER_DAMAGE: u32 = 15;
 
     text_queue.push_back(format!(
@@ -159,6 +191,8 @@ fn int_parse_move(
             EntityType::Rust => "Rust returned a result type that can be matched on.",
             EntityType::Cpp => "C++ needed a catch block to avoid a runtime error.",
             EntityType::Python => "Python needed a catch block to avoid a runtime error.",
+            EntityType::Js => "JavaScript needed a catch block to avoid a runtime error.",
+            EntityType::Go => "Go has its own error type that is nil if there was no error",
         };
     };
 

@@ -3,21 +3,21 @@ use crate::moves::Move;
 
 use macroquad::texture::Texture2D;
 
-pub struct RustEntity;
+pub struct GoEntity;
 
-impl EntityBuilder for RustEntity {
+impl EntityBuilder for GoEntity {
     fn build(level: u32, texture: Option<Texture2D>) -> Entity {
         Entity::new(
-            EntityType::Rust,
+            EntityType::Go,
             200,
             level,
             10,
             30,
             99,
             50,
-            vec![Move::Speed, Move::IntParse, Move::MultiThread, Move::Async],
-            vec![Move::Deadline],
-            vec![Move::Speed, Move::Async],
+            vec![Move::IntParse, Move::MultiThread, Move::Async],
+            vec![],
+            vec![Move::Async],
             texture,
         )
     }

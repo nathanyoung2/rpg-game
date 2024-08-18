@@ -3,21 +3,21 @@ use crate::moves::Move;
 
 use macroquad::texture::Texture2D;
 
-pub struct PythonEntity;
+pub struct JsEntity;
 
-impl EntityBuilder for PythonEntity {
+impl EntityBuilder for JsEntity {
     fn build(level: u32, texture: Option<Texture2D>) -> Entity {
         Entity::new(
-            EntityType::Python,
+            EntityType::Js,
             150,
             level,
-            35,
+            50,
             10,
             94,
             5,
-            vec![Move::Deadline],
-            vec![Move::Speed, Move::Async],
-            vec![Move::Deadline],
+            vec![Move::Deadline, Move::Async],
+            vec![Move::Speed],
+            vec![Move::Async],
             texture,
         )
     }

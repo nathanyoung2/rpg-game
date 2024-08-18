@@ -39,11 +39,9 @@ impl<'a> EntityStats<'a> {
             ..Default::default()
         };
 
-        draw_text(name, self.xpos, self.ypos, 35.0, WHITE);
-
         draw_text(
-            format!("{}/{}", health, max_health).as_str(),
-            self.xpos + 125.0,
+            format!("{}  {}/{}", name, health, max_health).as_str(),
+            self.xpos,
             self.ypos,
             35.0,
             WHITE,

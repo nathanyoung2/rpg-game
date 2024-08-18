@@ -16,7 +16,7 @@ impl EntityBuilder for CppEntity {
             99,
             20,
             vec![Move::IntParse, Move::Speed],
-            vec![],
+            vec![Move::Deadline],
             vec![Move::Speed],
             texture,
         )

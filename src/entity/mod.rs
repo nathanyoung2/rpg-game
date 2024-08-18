@@ -9,6 +9,12 @@ pub use rust_entity::RustEntity;
 mod python_entity;
 pub use python_entity::PythonEntity;
 
+mod js_entity;
+pub use js_entity::JsEntity;
+
+mod go_entity;
+pub use go_entity::GoEntity;
+
 use crate::moves::Move;
 use crate::moves::MoveData;
 
@@ -27,6 +33,8 @@ pub enum EntityType {
     Rust,
     Cpp,
     Python,
+    Js,
+    Go,
 }
 
 /// holds stats for entities for battles.
@@ -42,8 +50,8 @@ pub struct Entity {
     pub error_handling: u32,
     pub texture: Option<Texture2D>,
     moves: Vec<Move>,
-    weaknesses: Vec<Move>,
-    strengths: Vec<Move>,
+    pub weaknesses: Vec<Move>,
+    pub strengths: Vec<Move>,
     queued_move: Option<MoveData>,
 }
 
@@ -65,6 +73,8 @@ impl fmt::Display for Entity {
             EntityType::Rust => write!(f, "Rust"),
             EntityType::Cpp => write!(f, "C++"),
             EntityType::Python => write!(f, "Python"),
+            EntityType::Js => write!(f, "JavaScript"),
+            EntityType::Go => write!(f, "Go"),
         }
     }
 }
@@ -145,7 +155,10 @@ impl Entity {
 
         if let Some(mv) = applied_move {
             if self.weaknesses.contains(&mv) {
-                damage = (damage as f64 * 1.5) as u32;
+                damage = (damage as f64 * 1.75) as u32;
+            }
+            if self.strengths.contains(&mv) {
+                damage = (damage as f64 * 0.3) as u32;
             }
         }
 
@@ -181,8 +194,8 @@ impl Entity {
 
         // calculate damage multipliers
         let attack_multiplier: f64 = self.attack as f64 / 100.0 + 1.0;
-        let is_super_effective = self.weaknesses.contains(&mv);
-        let is_not_effective = self.strengths.contains(&mv);
+        let is_super_effective = target.weaknesses.contains(&mv);
+        let is_not_effective = target.strengths.contains(&mv);
 
         // execute the move
         mv.execute(
@@ -206,14 +219,14 @@ mod tests {
 
     #[test]
     fn take_damage() {
-        let mut player = RustEntity::build(0);
+        let mut player = RustEntity::build(0, None);
         assert_eq!(player.health, 200);
         player.damage(198, None);
         assert_eq!(player.health, 62);
     }
     #[test]
     fn test_entity_display() {
-        assert_eq!(format!("{}", RustEntity::build(0)), "Rust");
-        assert_eq!(format!("{}", CppEntity::build(0)), "C++");
+        assert_eq!(format!("{}", RustEntity::build(0, None)), "Rust");
+        assert_eq!(format!("{}", CppEntity::build(0, None)), "C++");
     }
 }
