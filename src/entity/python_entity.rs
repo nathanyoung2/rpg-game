@@ -15,7 +15,7 @@ impl EntityBuilder for PythonEntity {
             10,
             94,
             5,
-            vec![Move::Deadline],
+            vec![Move::Deadline, Move::Math],
             vec![Move::Speed, Move::Async],
             vec![Move::Deadline],
             texture,

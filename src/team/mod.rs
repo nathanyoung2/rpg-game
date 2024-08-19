@@ -33,3 +33,23 @@ impl Team {
         self.entities.push(entity);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::entity::{EntityBuilder, EntityType, PythonEntity, RustEntity};
+
+    #[test]
+    fn get_active_test() {
+        let mut team = Team::new();
+        let rust = RustEntity::build(0, None);
+        let python = PythonEntity::build(0, None);
+
+        team.push(rust);
+        team.push(python);
+
+        assert_eq!(EntityType::Rust, team.get_active().unwrap().entity_type);
+        let _ = team.set_active(1);
+        assert_eq!(EntityType::Python, team.get_active().unwrap().entity_type);
+    }
+}

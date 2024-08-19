@@ -9,6 +9,7 @@ pub enum Move {
     MultiThread,
     Deadline,
     Async,
+    Math,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -26,6 +27,7 @@ impl fmt::Display for Move {
             Move::MultiThread => write!(f, "Multi Thread"),
             Move::Deadline => write!(f, "Deadline"),
             Move::Async => write!(f, "Asynchronous"),
+            Move::Math => write!(f, "Math"),
         }
     }
 }
@@ -62,6 +64,7 @@ impl Move {
                 deadline_move(caller, enemy, attack_multiplier * multiplier, text_queue)
             }
             Move::Async => async_move(caller, enemy, attack_multiplier * multiplier, text_queue),
+            Move::Math => math_move(caller, enemy, attack_multiplier * multiplier, text_queue),
         }
 
         if is_not_effective {
@@ -82,6 +85,20 @@ impl Move {
         }
         priority
     }
+}
+
+fn math_move(
+    caller: &mut Entity,
+    enemy: &mut Entity,
+    attack_multiplier: f64,
+    text_queue: &mut VecDeque<String>,
+) {
+    const DAMAGE: f64 = 25.0;
+    text_queue.push_back(format!(
+        "with {}'s dynamic typing, an opening for an attack\ncould be calculated with ease",
+        caller,
+    ));
+    enemy.damage((DAMAGE * attack_multiplier) as u32, Some(Move::Math));
 }
 
 fn async_move(

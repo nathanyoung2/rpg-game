@@ -240,9 +240,10 @@ impl Battle<'_> {
         if player.health == 0 {
             self.text_queue
                 .push_back(format!("The player, {}, has fallen.", player));
-            if active_died(&mut self.player_team, &mut self.state) {
+            if rpg_game::active_died(&mut self.player_team) {
                 self.text_queue
                     .push_back(String::from("You lost the battle"));
+                self.state = State::Dialogue(Box::new(State::End));
                 return;
             }
         }
@@ -250,9 +251,10 @@ impl Battle<'_> {
         if enemy.health == 0 {
             self.text_queue
                 .push_back(format!("The enemy, {}, has fallen.", enemy));
-            if active_died(&mut self.enemy_team, &mut self.state) {
+            if rpg_game::active_died(&mut self.enemy_team) {
                 self.text_queue
                     .push_back(String::from("You won the battle, congratulations!"));
+                self.state = State::Dialogue(Box::new(State::End));
                 return;
             }
         }
@@ -309,15 +311,4 @@ impl Battle<'_> {
             );
         }
     }
-}
-
-fn active_died(team: &mut Team, state: &mut State) -> bool {
-    for (i, entity) in team.entities.iter().enumerate() {
-        if entity.health > 0 {
-            team.set_active(i).expect("Unexpected error");
-            return false;
-        }
-    }
-    *state = State::Dialogue(Box::new(State::End));
-    true
 }

@@ -6,10 +6,20 @@ mod team;
 
 pub use team::Team;
 
-use entity::Entity;
+use entity::*;
 use std::collections::VecDeque;
 
 use rand::prelude::*;
+
+pub fn active_died(team: &mut Team) -> bool {
+    for (i, entity) in team.entities.iter().enumerate() {
+        if entity.health > 0 {
+            team.set_active(i).expect("Unexpected error");
+            return false;
+        }
+    }
+    true
+}
 
 /// Execute moves of the player and enemy.
 /// Returns True if either the player or enemy died.
@@ -41,4 +51,26 @@ pub fn queue_enemy_move(enemy: &mut Entity) {
     let mv = enemy.get_moves().get(i).unwrap().clone();
 
     enemy.queue_move(mv);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn active_died_test() {
+        let mut team = Team::new();
+        let rust = RustEntity::build(0, None);
+        let rust2 = RustEntity::build(0, None);
+        team.push(rust);
+        team.push(rust2);
+
+        team.entities[0].health = 0;
+        team.entities[1].health = 1;
+
+        assert_eq!(false, active_died(&mut team));
+
+        team.entities[1].health = 0;
+        assert_eq!(true, active_died(&mut team));
+    }
 }

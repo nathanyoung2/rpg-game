@@ -16,7 +16,7 @@ impl EntityBuilder for RustEntity {
             99,
             50,
             vec![Move::Speed, Move::IntParse, Move::MultiThread, Move::Async],
-            vec![Move::Deadline],
+            vec![Move::Deadline, Move::Math],
             vec![Move::Speed, Move::Async],
             texture,
         )

@@ -28,7 +28,7 @@ pub trait EntityBuilder {
     fn build(level: u32, texture: Option<Texture2D>) -> Entity;
 }
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub enum EntityType {
     Rust,
     Cpp,
